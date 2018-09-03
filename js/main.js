@@ -72,7 +72,7 @@ const loadChartData = (currency) => {
 		loadChart("#chart",usd, euro, gbp, cad, aud, currency);
 	})
 }
-// Populates bar chart with data
+// Populates bar chart with data 
 const loadChart = (div, dollar, euro, gbp, cad, aud, currency) => {
 	let chart = c3.generate({
 		bindto: div,
