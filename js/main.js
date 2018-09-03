@@ -115,7 +115,7 @@ const loadLineChartData = (coin, fiat, days) => {
 			sum.push(response.Data[i].low + response.Data[i].high)
 			dates.push(moment.unix(response.Data[i].time).format("DD-MM-YYYY"))
 		}
-		let avg = sum.map(i => (i / 2));
+		let avg = sum.map(i => (i.toFixed(4) / 2));
 		loadLineChart("#lineChart", lows, highs, avg, coin, dates);
 	})
 }
