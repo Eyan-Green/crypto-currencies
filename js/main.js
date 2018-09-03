@@ -17,7 +17,7 @@ const getSymbols = () => {
 }
 // creates array of days
 const getDays = () => {
-	const days = [7,14,30, 60, 90];
+	const days = [7, 14, 30];
 	populateSelectDays(days);
 }
 // creates array of FIAT symbols
@@ -113,7 +113,7 @@ const loadLineChartData = (coin, fiat, days) => {
 			lows.push(response.Data[i].low);
 			highs.push(response.Data[i].high);
 			sum.push(response.Data[i].low + response.Data[i].high)
-			dates.push(moment.unix(response.Data[i].time).format("DD-MM-YYYY"))
+			dates.push(moment.unix(response.Data[i].time).format("DD-MM"))
 		}
 		let avg = sum.map(i => (i.toFixed(4) / 2));
 		loadLineChart("#lineChart", lows, highs, avg, coin, dates);
@@ -137,6 +137,18 @@ const loadLineChart = (div ,lows, highs, avg, coin, dates) => {
 	            averageArray,
 	            highArray
 	        ]
+	    },
+	    oninit: function () {
+        this.main.append('rect')
+            .style('fill', 'white')
+            .attr('x', 0.5)
+            .attr('y', -0.5)
+            .attr('width', this.width)
+            .attr('height', this.height)
+          	.transition().duration(1000)
+            .attr('x', this.width)
+            .attr('width', 0)
+          	.remove();
 	    },
 	    axis: {
 	        x: {
