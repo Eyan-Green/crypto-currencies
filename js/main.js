@@ -3,11 +3,13 @@ const url = "https://min-api.cryptocompare.com/data/price?fsym=";
 const currency = "BTC - Bitcoin";
 const params = "&tsyms=USD,GBP,EUR,AUD,CAD";
 const historyBaseUrl = "https://min-api.cryptocompare.com/data/histoday?fsym=";
+const exchanges = "https://min-api.cryptocompare.com/data/top/exchanges?fsym="
 const historyParams = "&tsym=";
 const historyFiat = "GBP";
 const historyParamsTwo = "&limit=";
 const historyDays = "7"
-
+// used as argument to sum all values in an array
+const reducer = (accumulator, currentValue) => accumulator + currentValue;
 // creates currency symbols array
 const getSymbols = () => {
 	const coinSymbols = ["BTC - Bitcoin", "ETH - Ethereum", "LTC - Litecoin", "XRP - Ripple",
@@ -25,7 +27,6 @@ const getFiatSymbols = () => {
 	const symbols = ["GBP", "EUR", "USD", "CAD", "AUD", "COP"];
 	populateSelectCurrency(symbols);
 }
-
 // Populates select tag with days
 const populateSelectCurrency = (currencies) => {
 	// Get dropdown element from DOM
@@ -46,7 +47,6 @@ const populateSelectDays = (days) => {
 	    dropdown[dropdown.length] = new Option(days[i], days[i]);
 	}
 }
-
 // Populates select tag with currency codes
 const populateSelect = (data) => {
 	// Get dropdown element from DOM
@@ -70,6 +70,41 @@ const loadChartData = (currency) => {
 		let cad = response.CAD;
 		let aud = response.AUD;
 		loadChart("#chart",usd, euro, gbp, cad, aud, currency);
+	})
+}
+// prepares exchange data from API 
+const loadExchangeData = (currency, coin) => {
+	fetch(`${exchanges}${coin}${historyParams}${currency}`, {
+		method: 'GET'
+	})
+	.then(response => response.json())
+	.then(response => {
+		let exchanges = [];
+		let volume24 = [];
+		response.Data.forEach(function(element) {
+			exchanges.push(element.exchange)
+			volume24.push(element.volume24hTo)
+		});
+		let sum = volume24.reduce(reducer);
+		const selectFiat = document.querySelector('#selectFiatCurrency').value;
+		document.getElementById('tradingVolume').innerHTML = `${coin} 24 hour trading volume ${selectFiat}: ${sum.toFixed(2)}`
+		loadPieChart(exchanges, volume24, sum);
+	})
+}
+// populates pie chart with data
+const loadPieChart = (names, volume, total) => {
+	let chart = c3.generate({
+		bindto: "#pieChart",
+		data: {
+			columns: [
+				[`${names[0]}`, volume[0]],
+				[`${names[1]}`, volume[1]],
+				[`${names[2]}`, volume[2]],
+				[`${names[3]}`, volume[3]],
+				[`${names[4]}`, volume[4]]
+			],
+			type: 'pie'
+		},
 	})
 }
 // Populates bar chart with data 
@@ -133,25 +168,33 @@ const loadLineChartData = (coin, fiat, days) => {
 	let highs = [];
 	let sum = [];
 	let dates = [];
-		for (let i = 0; i < response.Data.length; i++ ) {
-			lows.push(response.Data[i].low);
-			highs.push(response.Data[i].high);
-			sum.push(response.Data[i].low + response.Data[i].high)
-			dates.push(moment.unix(response.Data[i].time).format("DD-MM"))
-		}
+	let closePrices = [];
+	let openPrices = [];
+		response.Data.forEach(function(element) {
+			lows.push(element.low)
+			highs.push(element.high)
+			sum.push(element.low + element.high)
+			dates.push(moment.unix(element.time).format("DD-MM"))
+			closePrices.push(element.close)
+			openPrices.push(element.open)
+		});
 		let avg = sum.map(i => (i.toFixed(4) / 2));
-		loadLineChart("#lineChart", lows, highs, avg, coin, dates);
+		loadLineChart("#lineChart", lows, highs, avg, coin, dates, closePrices, openPrices);
 	})
 }
 // populates line chart
-const loadLineChart = (div ,lows, highs, avg, coin, dates) => {
-	lowArray = ['Low']
-	averageArray = ['Average']
-	highArray = ['High']
+const loadLineChart = (div ,lows, highs, avg, coin, dates, closePrices, openPrices) => {
+	lowArray = ['Low'];
+	averageArray = ['Average'];
+	highArray = ['High'];
+	closeArray = ['Close'];
+	openArray = ['Open'];
 	for (let i = 0; i < lows.length; i++) {
 		lowArray.push(lows[i])
 		averageArray.push(avg[i])
 		highArray.push(highs[i])
+		closeArray.push(closePrices[i])
+		openArray.push(openPrices[i])
 	}
 	let chart = c3.generate({
 		bindto: div,
@@ -159,7 +202,9 @@ const loadLineChart = (div ,lows, highs, avg, coin, dates) => {
 	        columns: [
 	            lowArray,
 	            averageArray,
-	            highArray
+	            highArray,
+	            closeArray,
+	            openArray
 	        ]
 	    },
 	    oninit: function () {
@@ -219,7 +264,7 @@ document.getElementById('selectFiatCurrency').addEventListener('change', () => {
 	const selectDay = document.querySelector('#selectDays').value;
 	const selectCoin = document.querySelector('#selectCoin').value;
 	const selectFiat = document.querySelector('#selectFiatCurrency').value;
-  	
+  	loadExchangeData(selectFiat, "BTC");
   	if (selectCoin !== "Select Coin"){
 		document.getElementById('averageHeader').innerHTML = `${selectCoin.split(" ")[0]} ${selectDay} day High/Low.`;
 		loadLineChartData(selectCoin.split(" ")[0], selectFiat, selectDay);
@@ -239,3 +284,4 @@ getDays();
 getFiatSymbols();
 loadChartData(currency.split(" ")[0]);
 loadLineChartData(currency.split(" ")[0], historyFiat, historyDays);
+loadExchangeData("GBP", "BTC");

@@ -133,6 +133,7 @@ const loadLineChartData = (coin, fiat, days) => {
 	let highs = [];
 	let sum = [];
 	let dates = [];
+	console.log(response.Data[0].close);
 		for (let i = 0; i < response.Data.length; i++ ) {
 			lows.push(response.Data[i].low);
 			highs.push(response.Data[i].high);
@@ -145,9 +146,9 @@ const loadLineChartData = (coin, fiat, days) => {
 }
 // populates line chart
 const loadLineChart = (div ,lows, highs, avg, coin, dates) => {
-	lowArray = ['Low']
-	averageArray = ['Average']
-	highArray = ['High']
+	lowArray = ['Low'];
+	averageArray = ['Average'];
+	highArray = ['High'];
 	for (let i = 0; i < lows.length; i++) {
 		lowArray.push(lows[i])
 		averageArray.push(avg[i])
