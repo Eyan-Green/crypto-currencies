@@ -14,7 +14,7 @@ const reducer = (accumulator, currentValue) => accumulator + currentValue;
 const getSymbols = () => {
 	const coinSymbols = ["BTC - Bitcoin", "ETH - Ethereum", "LTC - Litecoin", "XRP - Ripple",
 	 "TRX - Tron", "XMR - Monero", "BCH - BitcoinCash", "EOS - EOS", "ADA - Cardano", "XLM - Stellar",
-	  "NEO - NEO", "DASH - Dash", "ZEC - Zcash", "NANO - Nano", "LSK - Lisk", "QTUM - Qtum", "BNB - Binance"];
+	  "NEO - NEO", "DASH - Dash", "ZEC - Zcash", "NANO - Nano", "LSK - Lisk", "QTUM - Qtum", "BNB - Binance", "ETC - Ethereum Classic"];
 	populateSelect(coinSymbols.sort());
 }
 // creates array of days
