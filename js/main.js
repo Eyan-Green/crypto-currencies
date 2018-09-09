@@ -87,7 +87,7 @@ const loadExchangeData = (currency, coin) => {
 		});
 		let sum = volume24.reduce(reducer);
 		const selectFiat = document.querySelector('#selectFiatCurrency').value;
-		document.getElementById('tradingVolume').innerHTML = `${coin} 24 hour trading volume ${selectFiat}: ${sum.toFixed(2)}`
+		document.getElementById('tradingVolume').innerHTML = `${coin} 24 hour trading volume ${selectFiat}: ${sum.toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`
 		loadPieChart(exchanges, volume24, sum);
 	})
 }
