@@ -24,7 +24,7 @@ const getDays = () => {
 }
 // creates array of FIAT symbols
 const getFiatSymbols = () => {
-	const symbols = ["GBP", "EUR", "USD", "CAD", "AUD", "COP"];
+	const symbols = ["GBP", "EUR", "USD", "CAD", "AUD"];
 	populateSelectCurrency(symbols);
 }
 // Populates select tag with days
@@ -76,36 +76,21 @@ const loadChartData = (currency) => {
 const loadExchangeData = (currency, coin) => {
 	fetch(`${exchanges}${coin}${historyParams}${currency}`, {
 		method: 'GET'
-	})
-	.then(response => response.json())
-	.then(response => {
-		let exchanges = [];
-		let volume24 = [];
-		response.Data.forEach(function(element) {
-			exchanges.push(element.exchange)
-			volume24.push(element.volume24hTo)
-		});
-		let sum = volume24.reduce(reducer);
-		const selectFiat = document.querySelector('#selectFiatCurrency').value;
-		document.getElementById('tradingVolume').innerHTML = `${coin} 24 hour trading volume ${selectFiat}: ${sum.toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`
-		loadPieChart(exchanges, volume24, sum);
-	})
-}
-// populates pie chart with data
-const loadPieChart = (names, volume, total) => {
-	let chart = c3.generate({
-		bindto: "#pieChart",
-		data: {
-			columns: [
-				[`${names[0]}`, volume[0]],
-				[`${names[1]}`, volume[1]],
-				[`${names[2]}`, volume[2]],
-				[`${names[3]}`, volume[3]],
-				[`${names[4]}`, volume[4]]
-			],
-			type: 'pie'
-		},
-	})
+		})
+		.then(response => response.json())
+		.then(response => {
+			if (response.Data.length !== 0) {	
+				let volume24 = [];
+				response.Data.forEach(function(element) {
+					volume24.push(element.volume24hTo)
+				});
+				let sum = volume24.reduce(reducer);
+				const selectFiat = document.querySelector('#selectFiatCurrency').value;
+				document.getElementById('coinHeader').innerHTML = `${coin} 24 hour trading volume ${selectFiat}: ${sum.toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`
+			} else {
+				document.getElementById('coinHeader').innerHTML = `${coin}`
+			}
+		})
 }
 // Populates bar chart with data 
 const loadChart = (div, dollar, euro, gbp, cad, aud, currency) => {
@@ -134,28 +119,28 @@ const loadChart = (div, dollar, euro, gbp, cad, aud, currency) => {
 				['Euro', euro]
 	        ]
 	    });
-	}, 250);
+	}, 400);
 	setTimeout(function () {
 	    chart.load({
 	        columns: [
 				['USD', dollar]
 	        ]
 	    });
-	}, 500);
+	}, 800);
 	setTimeout(function () {
 	    chart.load({
 	        columns: [
 				['CAD', cad]
 	        ]
 	    });
-	}, 750);
+	}, 1200);
 	setTimeout(function () {
 	    chart.load({
 	        columns: [
 				['AUD', aud]
 	        ]
 	    });
-	}, 1000);
+	}, 1600);
 }
 // collects data from API for line chart
 const loadLineChartData = (coin, fiat, days) => {
@@ -239,7 +224,7 @@ document.getElementById('selectCoin').addEventListener('change', () => {
   	const selectFiat = document.querySelector('#selectFiatCurrency').value;
   	
   	if (selectCoin !== "Select Coin") {
-	  	document.getElementById('coinHeader').innerHTML = `${selectCoin.split(" ")[2]}`;
+  		loadExchangeData(selectFiat, selectCoin.split(" ")[0]);
 		document.getElementById('averageHeader').innerHTML = `${selectCoin.split(" ")[0]} ${selectDay} day High/Low.`;
 		loadLineChartData(selectCoin.split(" ")[0], selectFiat, selectDay);
 	  	loadChartData(selectCoin.split(" ")[0]);
@@ -264,18 +249,18 @@ document.getElementById('selectFiatCurrency').addEventListener('change', () => {
 	const selectDay = document.querySelector('#selectDays').value;
 	const selectCoin = document.querySelector('#selectCoin').value;
 	const selectFiat = document.querySelector('#selectFiatCurrency').value;
-  	loadExchangeData(selectFiat, "BTC");
   	if (selectCoin !== "Select Coin"){
+  		loadExchangeData(selectFiat, selectCoin.split(" ")[0]);
 		document.getElementById('averageHeader').innerHTML = `${selectCoin.split(" ")[0]} ${selectDay} day High/Low.`;
 		loadLineChartData(selectCoin.split(" ")[0], selectFiat, selectDay);
 	} else {
+		loadExchangeData(selectFiat, "BTC");
 		document.getElementById('averageHeader').innerHTML = `${currency.split(" ")[0]} ${selectDay} day High/Low.`;
 		loadLineChartData(currency.split(" ")[0], selectFiat, selectDay);
 	}
 });
 
 // populates h2 tag on load
-document.getElementById('coinHeader').innerHTML = `${currency.split(" ")[2]}`;
 document.getElementById('averageHeader').innerHTML = `${currency.split(" ")[0]} 7 day High/Low.`;
 
 // callbacks 
