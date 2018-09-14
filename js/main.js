@@ -12,10 +12,17 @@ const historyDays = "7"
 const reducer = (accumulator, currentValue) => accumulator + currentValue;
 // creates currency symbols array
 const getSymbols = () => {
-	const coinSymbols = ["BTC - Bitcoin", "ETH - Ethereum", "LTC - Litecoin", "XRP - Ripple",
-	 "TRX - Tron", "XMR - Monero", "BCH - BitcoinCash", "EOS - EOS", "ADA - Cardano", "XLM - Stellar",
-	  "NEO - NEO", "DASH - Dash", "ZEC - Zcash", "NANO - Nano", "LSK - Lisk", "QTUM - Qtum", "BNB - Binance", "ETC - Ethereum Classic"];
-	populateSelect(coinSymbols.sort());
+	let coins = [];
+	fetch("https://min-api.cryptocompare.com/data/top/totalvol?limit=100&tsym=USD", {
+		method: 'GET'
+	})
+	.then(response => response.json())
+	.then(response => {
+		for (let i = 0; i < response.Data.length; ++i) {
+			coins.push(`${response.Data[i].CoinInfo.Name} - ${response.Data[i].CoinInfo.FullName}`)
+		}
+		populateSelect(coins.sort());
+	})
 }
 // creates array of days
 const getDays = () => {
@@ -24,7 +31,7 @@ const getDays = () => {
 }
 // creates array of FIAT symbols
 const getFiatSymbols = () => {
-	const symbols = ["GBP", "EUR", "USD", "CAD", "AUD"];
+	let symbols = ["GBP", "EUR", "USD", "AUD", "CAD"];
 	populateSelectCurrency(symbols);
 }
 // Populates select tag with days
@@ -64,17 +71,12 @@ const loadChartData = (currency) => {
 	})
 	.then(response => response.json())
 	.then(response => {
-		let usd = response.USD;
-		let euro = response.EUR;
-		let gbp = response.GBP;
-		let cad = response.CAD;
-		let aud = response.AUD;
-		loadChart("#chart",usd, euro, gbp, cad, aud, currency);
+		loadChart("#chart",response, currency);
 	})
 }
 // prepares exchange data from API 
 const loadExchangeData = (currency, coin) => {
-	fetch(`${exchanges}${coin}${historyParams}${currency}`, {
+	fetch(`${exchanges}${coin.split(" ")[0]}${historyParams}${currency}`, {
 		method: 'GET'
 		})
 		.then(response => response.json())
@@ -86,19 +88,19 @@ const loadExchangeData = (currency, coin) => {
 				});
 				let sum = volume24.reduce(reducer);
 				const selectFiat = document.querySelector('#selectFiatCurrency').value;
-				document.getElementById('coinHeader').innerHTML = `${coin} 24 hour trading volume ${selectFiat}: ${sum.toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`
+				document.getElementById('coinHeader').innerHTML = `${coin.split(" ")[0]} 24 hour trading volume ${selectFiat}: ${sum.toFixed(0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`
 			} else {
 				document.getElementById('coinHeader').innerHTML = `${coin}`
 			}
 		})
 }
 // Populates bar chart with data 
-const loadChart = (div, dollar, euro, gbp, cad, aud, currency) => {
+const loadChart = (div, data, currency) => {
 	let chart = c3.generate({
 		bindto: div,
 		data: {
 			columns: [
-				['Pound', gbp]
+				['Pound', data.GBP]
 			],
 			type: 'bar'
 		},
@@ -116,28 +118,28 @@ const loadChart = (div, dollar, euro, gbp, cad, aud, currency) => {
 	setTimeout(function () {
 	    chart.load({
 	        columns: [
-				['Euro', euro]
+				['Euro', data.EUR]
 	        ]
 	    });
 	}, 400);
 	setTimeout(function () {
 	    chart.load({
 	        columns: [
-				['USD', dollar]
+				['USD', data.USD]
 	        ]
 	    });
 	}, 800);
 	setTimeout(function () {
 	    chart.load({
 	        columns: [
-				['CAD', cad]
+				['AUD', data.AUD]
 	        ]
 	    });
 	}, 1200);
 	setTimeout(function () {
 	    chart.load({
 	        columns: [
-				['AUD', aud]
+				['CAD', data.CAD]
 	        ]
 	    });
 	}, 1600);
@@ -224,7 +226,7 @@ document.getElementById('selectCoin').addEventListener('change', () => {
   	const selectFiat = document.querySelector('#selectFiatCurrency').value;
   	
   	if (selectCoin !== "Select Coin") {
-  		loadExchangeData(selectFiat, selectCoin.split(" ")[0]);
+  		loadExchangeData(selectFiat, selectCoin);
 		document.getElementById('averageHeader').innerHTML = `${selectCoin.split(" ")[0]} ${selectDay} day High/Low.`;
 		loadLineChartData(selectCoin.split(" ")[0], selectFiat, selectDay);
 	  	loadChartData(selectCoin.split(" ")[0]);
@@ -250,7 +252,7 @@ document.getElementById('selectFiatCurrency').addEventListener('change', () => {
 	const selectCoin = document.querySelector('#selectCoin').value;
 	const selectFiat = document.querySelector('#selectFiatCurrency').value;
   	if (selectCoin !== "Select Coin"){
-  		loadExchangeData(selectFiat, selectCoin.split(" ")[0]);
+  		loadExchangeData(selectFiat, selectCoin);
 		document.getElementById('averageHeader').innerHTML = `${selectCoin.split(" ")[0]} ${selectDay} day High/Low.`;
 		loadLineChartData(selectCoin.split(" ")[0], selectFiat, selectDay);
 	} else {
